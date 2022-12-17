@@ -1,0 +1,7 @@
+services:
+  app: 
+    build: .
+    container_name: app
+    ports: 
+      - "6969:80" 
+      - "6970:443" 
