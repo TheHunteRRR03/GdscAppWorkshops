@@ -7,7 +7,7 @@ using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 namespace App_GDSC_workshops.Features.Subjects;
 
 [ApiController]
-[Route("subject")]
+[Route("subjects")]
 
 public class SubjectsController : ControllerBase
 {

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace App_GDSC_workshops.Features.Tests;
 
 [ApiController]
-[Route("test")]
+[Route("tests")]
 public class TestsController : ControllerBase
 {
     private static List<TestModel> _mockDbTests = new List<TestModel>();
