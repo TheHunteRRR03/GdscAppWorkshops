@@ -6,14 +6,13 @@ namespace App_GDSC_workshops.Features.Assignments;
 
 [ApiController]
 [Route("assignments")]
-public class AssignmentsController
+public class AssignmentsController : ControllerBase
 {
     private static List<AssignmentModel> _mockDB = new List<AssignmentModel>();
 
     public AssignmentsController(){}
 
     [HttpPost]
-
     public AssignmentResponse Add(AssignmentRequest request)
     {
         var assignment = new AssignmentModel
@@ -27,6 +26,7 @@ public class AssignmentsController
         };
         
         _mockDB.Add(assignment);
+        
         return new AssignmentResponse
         {
             Id = assignment.Id,
@@ -53,10 +53,9 @@ public class AssignmentsController
     public AssignmentResponse Get([FromRoute] string id)
     {
         var assignment = _mockDB.FirstOrDefault(x => x.Id == id);
+        
         if (assignment is null)
-        {
             return null;
-        }
 
         return new AssignmentResponse
         {
@@ -65,7 +64,46 @@ public class AssignmentsController
             Description = assignment.Description,
             DeadLine = assignment.DeadLine
         };
-        
-        //delete update la toate
     }
+    
+    [HttpDelete("{id})")]
+    public AssignmentResponse Delete([FromRoute] string id)
+    {
+        var assignment = _mockDB.FirstOrDefault(x => x.Id == id);
+        
+        if (assignment is null)
+            return null;
+
+        _mockDB.Remove(assignment);
+        
+        return new AssignmentResponse
+        {
+            Id = assignment.Id,
+            Subject = assignment.Subject,
+            Description = assignment.Description,
+            DeadLine = assignment.DeadLine
+        };
+    }
+
+     [HttpPatch("{id}")]
+     public AssignmentResponse Patch([FromRoute] string id, [FromBody] AssignmentRequest request)
+     {
+         var assignment = _mockDB.FirstOrDefault(x => x.Id == id);
+         
+         if (assignment is null)
+             return null;
+         
+         assignment.DeadLine = request.Deadline;
+         assignment.Description = request.Description;
+         assignment.Subject = request.Subject;
+         assignment.Updated = DateTime.UtcNow;
+         
+         return new AssignmentResponse
+         {
+             Id = assignment.Id,
+             DeadLine = assignment.DeadLine, 
+             Description = assignment.Description,
+             Subject = assignment.Subject
+         }; 
+     }
 }
