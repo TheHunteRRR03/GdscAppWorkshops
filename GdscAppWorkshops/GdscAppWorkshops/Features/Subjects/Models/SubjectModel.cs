@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using App_GDSC_workshops.Base;
+﻿using App_GDSC_workshops.Base;
 
 namespace App_GDSC_workshops.Features.Subjects.Models;
 
