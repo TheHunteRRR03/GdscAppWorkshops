@@ -6,7 +6,6 @@ namespace App_GDSC_workshops.Features.Subjects;
 
 [ApiController]
 [Route("subjects")]
-
 public class SubjectsController : ControllerBase
 {
     private static List<SubjectModel> _mockDBSubject = new List<SubjectModel>();

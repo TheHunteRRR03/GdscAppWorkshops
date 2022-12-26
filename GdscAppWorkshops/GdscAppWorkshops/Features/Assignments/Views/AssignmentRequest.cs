@@ -11,5 +11,5 @@ public class AssignmentRequest
     public string Description { get; set; }
     
     [Required]
-    public DateTime Deadline { get; set; }
+    public DateTime DeadLine { get; set; }
 }

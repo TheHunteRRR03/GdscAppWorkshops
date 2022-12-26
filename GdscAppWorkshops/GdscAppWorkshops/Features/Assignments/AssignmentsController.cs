@@ -22,7 +22,7 @@ public class AssignmentsController : ControllerBase
             Updated = DateTime.UtcNow,
             Subject = request.Subject,
             Description = request.Description,
-            DeadLine = request.Deadline
+            DeadLine = request.DeadLine
         };
         
         _mockDB.Add(assignment);
@@ -93,7 +93,7 @@ public class AssignmentsController : ControllerBase
          if (assignment is null)
              return null;
          
-         assignment.DeadLine = request.Deadline;
+         assignment.DeadLine = request.DeadLine;
          assignment.Description = request.Description;
          assignment.Subject = request.Subject;
          assignment.Updated = DateTime.UtcNow;
