@@ -1,4 +1,5 @@
 ﻿using App_GDSC_workshops.Base;
+using App_GDSC_workshops.Base.Models;
 
 namespace App_GDSC_workshops.Features.Tests.Models;
 

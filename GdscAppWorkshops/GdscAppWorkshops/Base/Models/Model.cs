@@ -1,4 +1,4 @@
-﻿namespace App_GDSC_workshops.Base;
+﻿namespace App_GDSC_workshops.Base.Models;
 
 public class Model
 {
