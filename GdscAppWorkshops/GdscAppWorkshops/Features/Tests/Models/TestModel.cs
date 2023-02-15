@@ -7,5 +7,8 @@ public class TestModel : Model
 {
     public string Subject { get; set; }
     
+    public string Descripion { get; set; }
     public DateTime TestDate { get; set; }
+    
+    public float Grade { get; set; }
 }

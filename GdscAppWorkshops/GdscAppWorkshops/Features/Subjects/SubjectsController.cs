@@ -1,6 +1,8 @@
-﻿using App_GDSC_workshops.Features.Subjects.Models;
+﻿using App_GDSC_workshops.Database;
+using App_GDSC_workshops.Features.Subjects.Models;
 using App_GDSC_workshops.Features.Subjects.Views;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace App_GDSC_workshops.Features.Subjects;
 
@@ -8,12 +10,18 @@ namespace App_GDSC_workshops.Features.Subjects;
 [Route("subjects")]
 public class SubjectsController : ControllerBase
 {
-    private static List<SubjectModel> _mockDBSubject = new List<SubjectModel>();
-    
-    public SubjectsController(){}
+    private readonly AppDbContext _dbContext;
+
+    public SubjectsController(AppDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
 
     [HttpPost]
-    public SubjectResponse Add(SubjectRequest request)
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<SubjectResponse>>Add(SubjectRequest request)
     {
         var subject = new SubjectModel
         {
@@ -22,88 +30,76 @@ public class SubjectsController : ControllerBase
             Updated = DateTime.UtcNow,
             Name = request.Name,
             ProfessorMail = request.ProfessorMail,
-            Grades = request.Grades.ToList()
+            Grades = new List<double>()
         };
+
+        var response = await _dbContext.Subjects.AddAsync(subject);
+        await _dbContext.SaveChangesAsync();
         
-        _mockDBSubject.Add(subject);
-        
-        return new SubjectResponse
-        {
-            Id = subject.Id,
-            Name = subject.Name,
-            ProfessorMail = subject.ProfessorMail,
-            Grades = request.Grades.ToList()
-        };
+        return Created("Subject", response.Entity);
     }
 
     [HttpGet]
-    public IEnumerable<SubjectResponse> Get()
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<SubjectResponse>> Get()
     {
-        return _mockDBSubject.Select(
+        var entities = await _dbContext.Subjects.Select(
             subject => new SubjectResponse
             {
                 Id = subject.Id,
                 Name = subject.Name,
                 ProfessorMail = subject.ProfessorMail,
-                Grades = subject.Grades.ToList()
-            }).ToList();
-    }
-
-    [HttpGet("{id}")]
-    public SubjectResponse Get([FromRoute] string id)
-    {
-        var subject = _mockDBSubject.FirstOrDefault(x => x.Id == id);
+                Grades = subject.Grades
+            }
+        ).ToListAsync();
         
-        if (subject is null)
-            return null;
-
-        return new SubjectResponse
-        {
-            Id = subject.Id,
-            Name = subject.Name,
-            ProfessorMail = subject.ProfessorMail,
-            Grades = subject.Grades.ToList()
-        };
+        return Ok(entities);
+    }
+    
+    [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<SubjectResponse>> Get([FromRoute] string id)
+    {
+        var entity = await _dbContext.Subjects.FirstOrDefaultAsync(x => x.Id == id);
+        
+        return entity is null ? NotFound("ete nu-i") : Ok(entity);
     }
 
     [HttpDelete("{id}")]
-    public SubjectResponse Delete([FromRoute] string id)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<SubjectResponse>> Delete([FromRoute] string id)
     {
-        var subject = _mockDBSubject.FirstOrDefault(x => x.Id == id);
+        var entity = await _dbContext.Subjects.FirstOrDefaultAsync(x => x.Id == id);
+        if (entity is null)
+            return NotFound("ete nu-i");
 
-        if (subject is null)
-            return null;
-
-        _mockDBSubject.Remove(subject);
-
-        return new SubjectResponse
-        {
-            Id = subject.Id,
-            Grades = subject.Grades,
-            Name = subject.Name,
-            ProfessorMail = subject.ProfessorMail
-        };
+        var result = _dbContext.Subjects.Remove(entity);
+        await _dbContext.SaveChangesAsync();
+        
+        return Ok(result.Entity);
     }
 
     [HttpPatch("{id}")]
-    public SubjectResponse Patch([FromRoute] string id, [FromBody] SubjectRequest request)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<SubjectResponse>> Patch([FromRoute] string id, [FromBody] SubjectRequest request)
     {
-        var subject = _mockDBSubject.FirstOrDefault(x => x.Id == id);
-
-        if (subject is null)
-            return null;
-
-        subject.Grades = request.Grades;
-        subject.Name = request.Name;
-        subject.ProfessorMail = request.ProfessorMail;
-        subject.Updated = DateTime.UtcNow;
-
-        return new SubjectResponse
-        {
-            Id = subject.Id,
-            Grades = subject.Grades,
-            Name = subject.Name,
-            ProfessorMail = subject.ProfessorMail
-        };
+        var entity = await _dbContext.Subjects.FirstOrDefaultAsync(x => x.Id == id);
+        if (entity is null)
+            return NotFound("ete nu-i");
+        
+        entity.Name = request.Name;
+        entity.ProfessorMail = request.ProfessorMail;
+        entity.Updated = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+        
+        return Ok(entity);
     }
 }

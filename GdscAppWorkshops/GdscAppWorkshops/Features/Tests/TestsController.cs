@@ -1,6 +1,8 @@
-﻿using App_GDSC_workshops.Features.Tests.Models;
+﻿using App_GDSC_workshops.Database;
+using App_GDSC_workshops.Features.Tests.Models;
 using App_GDSC_workshops.Features.Tests.Views;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace App_GDSC_workshops.Features.Tests;
 
@@ -8,12 +10,18 @@ namespace App_GDSC_workshops.Features.Tests;
 [Route("tests")]
 public class TestsController : ControllerBase
 {
-    private static List<TestModel> _mockDbTests = new List<TestModel>();
+    private readonly AppDbContext _dbContext;
 
-    public TestsController() {}
+    public TestsController(AppDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
 
     [HttpPost]
-    public TestResponse Add(TestRequest request)
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<TestResponse>> Add(TestRequest request)
     {
         var test = new TestModel
         {
@@ -24,79 +32,72 @@ public class TestsController : ControllerBase
             TestDate = request.TestDate
         };
 
-        _mockDbTests.Add(test);
+        var response = await _dbContext.Tests.AddAsync(test);
+        await _dbContext.SaveChangesAsync();
 
-        return new TestResponse()
-        {
-            Id = test.Id,
-            Subject = test.Subject,
-            TestDate = test.TestDate
-        };
+        return Created("Test", response.Entity);
     }
 
     [HttpGet]
-    public IEnumerable<TestResponse> Get()
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<TestResponse>> Get()
     {
-        return _mockDbTests.Select(
+        var entities = await _dbContext.Tests.Select(
             test => new TestResponse
             {
                 Id = test.Id,
                 Subject = test.Subject,
                 TestDate = test.TestDate
-            }).ToList();
+            }
+        ).ToListAsync();
+
+        return Ok(entities);
     }
 
     [HttpGet("{id}")]
-    public TestResponse Get([FromRoute] string id)
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<TestResponse>> Get([FromRoute] string id)
     {
-        var test = _mockDbTests.FirstOrDefault(x => x.Id == id);
+        var entity = await _dbContext.Tests.FirstOrDefaultAsync(x => x.Id == id);
         
-        if (test is null)
-            return null;
-
-        return new TestResponse
-        {
-            Id = test.Id,
-            Subject = test.Subject,
-            TestDate = test.TestDate
-        };
+        return entity is null ? NotFound("ete nu-i") : Ok(entity);
     }
 
     [HttpDelete("{id}")]
-    public TestResponse Delete([FromRoute] string id)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<TestResponse>> Delete([FromRoute] string id)
     {
-        var test = _mockDbTests.FirstOrDefault(x => x.Id == id);
+        var entity = await _dbContext.Tests.FirstOrDefaultAsync(x => x.Id == id);
+        if (entity is null)
+            return NotFound("ete nu-i");
 
-        if (test is null)
-            return null;
+        var result = _dbContext.Tests.Remove(entity);
+        await _dbContext.SaveChangesAsync();
 
-        _mockDbTests.Remove(test);
-
-        return new TestResponse
-        {
-            Id = test.Id,
-            Subject = test.Subject,
-            TestDate = test.TestDate
-        };
+        return Ok(result.Entity);
     }
 
     [HttpPatch("{id}")]
-    public TestResponse Patch([FromRoute] string id, [FromBody] TestRequest request)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<TestResponse>> Patch([FromRoute] string id, [FromBody] TestRequest request)
     {
-        var test = _mockDbTests.FirstOrDefault(x => x.Id == id);
+        var entity = await _dbContext.Tests.FirstOrDefaultAsync(x => x.Id == id);
+        if (entity is null)
+            return NotFound("ete nu-i");
 
-        if (test is null)
-            return null;
+        entity.Subject = request.Subject;
+        entity.TestDate = request.TestDate;
+        entity.Updated = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
 
-        test.Subject = request.Subject;
-        test.TestDate = request.TestDate;
-        test.Updated = DateTime.UtcNow;
-
-        return new TestResponse
-        {
-            Id = test.Id,
-            Subject = test.Subject,
-            TestDate = test.TestDate
-        };
+        return Ok(entity);
     }
 }
